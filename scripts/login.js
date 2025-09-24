@@ -8,7 +8,9 @@ loginForm.addEventListener("submit", (eventElement) => {
 
   sendRequestForLogin(email, password).then((userData) => {
     if (userData) {
-      console.log("User data:", userData.user);
+      // localStorage.setItem("user:", userData.user);
+      localStorage.setItem("token", userData.token);
+      window.location.href = "../dashboard.html";
     }
   });
 });
