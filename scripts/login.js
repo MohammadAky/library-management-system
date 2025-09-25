@@ -8,8 +8,8 @@ loginForm.addEventListener("submit", (eventElement) => {
 
   sendRequestForLogin(email, password).then((userData) => {
     if (userData) {
-      // localStorage.setItem("user:", userData.user);
-      localStorage.setItem("token", userData.token);
+      // localStorage.setItem("token", userData.token);
+      document.cookie = `token=${userData.token}; path=/; max-age=86400`;
       window.location.href = "../dashboard.html";
     }
   });
@@ -40,7 +40,7 @@ function sendRequestForLogin(email, password) {
     .then(({ ok, data }) => {
       if (ok) {
         console.log("Login success:", data);
-        alert("✅ Login successful!");
+        // alert(" Login successful!");
         return data;
       } else {
         errorMessage = data.message || "Wrong email or password";
