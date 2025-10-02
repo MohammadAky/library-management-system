@@ -77,7 +77,21 @@ async function loadingBooks() {
       "<p style='color: red;'>Unable to load books. Please try again later.</p>";
   }
 }
-
+async function getDetailsBook(BookId) {
+  try {
+    const response = await fetch(
+      `https://karyar-library-management-system.liara.run/api/books/${BookId}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    const bookData = await response.json();
+    return bookData;
+  } catch (error) {
+    console.log(error);
+  }
+}
 function displayBooks(books) {
   const booksGrid = document.querySelector(".grid.grid-3");
   booksGrid.innerHTML = "";
@@ -112,6 +126,10 @@ function displayBooks(books) {
                         <button class="btn btn-secondary btn-sm">View Details</button>
                     </div>`;
     booksGrid.appendChild(card);
+    const viewDetailsBtn = card.querySelector(".btn.btn-secondary.btn-sm");
+    viewDetailsBtn.addEventListener("click", () => {
+      getDetailsBook(book.id);
+    });
   });
 }
 loadingBooks();
