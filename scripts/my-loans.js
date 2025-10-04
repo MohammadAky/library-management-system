@@ -34,6 +34,9 @@ async function fetchUserLoans(token) {
 }
 
 const authToken = getCookie("token");
+if (!authToken) {
+  window.location.href = "../login.html";
+}
 fetchCurrentUser(authToken).then((response) => {
   //   document.getElementsByClassName("").innerText = response.data.user.firstName;
 

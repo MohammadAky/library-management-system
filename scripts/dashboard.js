@@ -20,6 +20,9 @@ async function fetchCurrentUser(token) {
   }
 }
 const authToken = getCookie("token");
+if (!authToken) {
+  window.location.href = "../login.html";
+}
 fetchCurrentUser(authToken).then((response) => {
   document.querySelector("#userName").innerText = response.data.user.firstName;
   document.querySelector("#userAvatar").innerText = response.data.user.firstName[0];
