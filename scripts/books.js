@@ -13,20 +13,31 @@ async function fetchCurrentUser(token) {
         Authorization: "Bearer " + token,
       },
     });
+
+    if (response.status === 401) {
+      window.location.href = "../login.html";
+      return null;
+    }
+
     const data = await response.json();
-    return data;
+
+    return data.data;
   } catch (error) {
     console.error("Error:", error);
+    return null;
   }
 }
+
 const authToken = getCookie("token");
 if (!authToken) {
   window.location.href = "../login.html";
 }
 fetchCurrentUser(authToken).then((response) => {
-  document.querySelector(".user-info span").innerText = response.data.user.firstName;
-  document.querySelector(".user-avatar").innerText = response.data.user.firstName[0];
-  //   console.log(response.data);
+  if (!response) return;
+
+  document.querySelector(".user-info span").innerText = response.user.firstName;
+  document.querySelector(".user-avatar").innerText = response.user.firstName[0];
+  localStorage.setItem("User", JSON.stringify(response.user));
 });
 
 async function fetchBooks(token) {
@@ -50,6 +61,7 @@ async function fetchBooks(token) {
     return data;
   } catch (error) {
     console.log("Error:", error);
+    return null;
   }
 }
 
@@ -58,15 +70,20 @@ async function loadingBooks() {
   const savedBooks = localStorage.getItem("Books");
 
   if (savedBooks) {
-    const cacheData = JSON.parse(savedBooks);
+    try {
+      const cacheData = JSON.parse(savedBooks);
 
-    if (Date.now() - cacheData.timestamp < cacheDuration) {
-      console.log("Books loaded from localStorage (valid cache):", cacheData.books);
-      displayBooks(cacheData.books); // display books from chache
-      return;
-    } else {
-      console.log("Cache expired, removing old data and fetching from API");
-      localStorage.removeItem("Books"); // remove expired cached books
+      if (Date.now() - cacheData.timestamp < cacheDuration) {
+        console.log("Books loaded from localStorage (valid cache):", cacheData.books);
+        displayBooks(cacheData.books); // display books from chache
+        return;
+      } else {
+        console.log("Cache expired, removing old data and fetching from API");
+        localStorage.removeItem("Books"); // remove expired cached books
+      }
+    } catch (parseError) {
+      console.error("Error parsing cached books:", parseError);
+      localStorage.removeItem("Books");
     }
   }
   const response = await fetchBooks(authToken);
@@ -90,10 +107,10 @@ async function getDetailsBook(BookId) {
       }
     );
     const bookData = await response.json();
-
     return bookData;
   } catch (error) {
     console.log(error);
+    return null;
   }
 }
 function displayBooks(books) {
@@ -147,12 +164,12 @@ function displayBooks(books) {
 
     const borrowBookBtn = card.querySelector(".btn.btn-primary.btn-sm");
     borrowBookBtn.addEventListener("click", () => {
-      console.log("hi");
+      borrowBook(book.id);
     });
 
     const viewDetailsBtn = card.querySelector(".btn.btn-secondary.btn-sm");
     viewDetailsBtn.addEventListener("click", async () => {
-      bookInfo = await getDetailsBook(book.id);
+      let bookInfo = await getDetailsBook(book.id);
 
       if (bookInfo) {
         card.querySelector(".publisher").innerHTML =
@@ -161,6 +178,12 @@ function displayBooks(books) {
           "<strong>Publication Year:</strong> " + bookInfo.publicationYear || "Unknown";
         card.querySelector(".description").innerHTML =
           "<strong>Description:</strong> " + bookInfo.description ?? "N/A";
+      } else {
+        card.querySelector(".publisher").innerHTML = "<strong>Publisher:</strong> Unknown";
+        card.querySelector(".publicationYear").innerHTML =
+          "<strong>Publication Year:</strong> Unknown";
+        card.querySelector(".description").innerHTML =
+          "<strong>Description:</strong> Unable to load";
       }
 
       card.classList.add("flipped");
@@ -170,21 +193,46 @@ function displayBooks(books) {
     });
   });
 }
-async function borrowBook(_bookId, _userId, _loanPeriod, _dueDate) {
+
+async function borrowBook(_bookId) {
   try {
+    const userData = localStorage.getItem("User");
+    if (!userData) {
+      console.error("User data not found");
+      return;
+    }
+
+    const user = JSON.parse(userData);
+    const loanPeriod = 14;
+    const dueDate = new Date(Date.now() + loanPeriod * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+
     const response = await fetch("https://karyar-library-management-system.liara.run/api/loans", {
-      method: "",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + authToken },
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + authToken,
+      },
       body: JSON.stringify({
         bookId: _bookId,
-        userId: _userId,
-        loanPeriod: _loanPeriod,
-        dueDate: _dueDate,
+        userId: user.id,
+        loanPeriod: loanPeriod,
+        dueDate: dueDate,
       }),
     });
-    console.log(response.json());
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Book borrowed successfully:", result);
+
+    loadingBooks();
   } catch (error) {
-    console.log(error);
+    console.error("Error borrowing book:", error);
   }
 }
+
 loadingBooks();
