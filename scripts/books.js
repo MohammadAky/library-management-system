@@ -164,7 +164,10 @@ function displayBooks(books) {
 
     const borrowBookBtn = card.querySelector(".btn.btn-primary.btn-sm");
     borrowBookBtn.addEventListener("click", () => {
-      borrowBook(book.id);
+      const confirmed = confirm(`Are you sure you want to borrow "${book.title}"?`);
+      if (confirmed) {
+        borrowBook(book.id);
+      }
     });
 
     const viewDetailsBtn = card.querySelector(".btn.btn-secondary.btn-sm");
@@ -229,7 +232,22 @@ async function borrowBook(_bookId) {
     const result = await response.json();
     console.log("Book borrowed successfully:", result);
 
-    loadingBooks();
+    const savedBooks = JSON.parse(localStorage.getItem("Books"));
+    if (savedBooks && savedBooks.books) {
+      const bookIndex = savedBooks.books.findIndex((b) => b.id === _bookId);
+      if (bookIndex !== -1) {
+        savedBooks.books[bookIndex].availableCopies = Math.max(
+          0,
+          savedBooks.books[bookIndex].availableCopies - 1
+        );
+
+        savedBooks.books[bookIndex].available = savedBooks.books[bookIndex].availableCopies > 0;
+
+        localStorage.setItem("Books", JSON.stringify(savedBooks));
+      }
+    }
+
+    displayBooks(savedBooks.books);
   } catch (error) {
     console.error("Error borrowing book:", error);
   }

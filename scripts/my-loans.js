@@ -38,7 +38,6 @@ if (!authToken) {
   window.location.href = "../login.html";
 }
 fetchCurrentUser(authToken).then((response) => {
-  console.log(response.data.user);
   document.querySelector(".user-avatar").innerText = response.data.user.firstName[0];
   document.querySelector(".user-info span").innerText = response.data.user.firstName;
   response.data.user.firstName;
@@ -107,7 +106,6 @@ async function loadingLoans() {
   }
 }
 
-// Event delegation for return buttons
 document.querySelector(".table tbody").addEventListener("click", (e) => {
   if (e.target.classList.contains("btn-success")) {
     const loanId = e.target.dataset.loanId;
