@@ -93,8 +93,6 @@ body {
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   position: relative;
-  /* perspective: 1000px; */
-  /* height: 350px; */
 }
 .card-inner {
   position: relative;

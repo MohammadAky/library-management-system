@@ -75,11 +75,11 @@ async function loadingBooks() {
 
       if (Date.now() - cacheData.timestamp < cacheDuration) {
         console.log("Books loaded from localStorage (valid cache):", cacheData.books);
-        displayBooks(cacheData.books); // display books from chache
+        displayBooks(cacheData.books);
         return;
       } else {
         console.log("Cache expired, removing old data and fetching from API");
-        localStorage.removeItem("Books"); // remove expired cached books
+        localStorage.removeItem("Books");
       }
     } catch (parseError) {
       console.error("Error parsing cached books:", parseError);
